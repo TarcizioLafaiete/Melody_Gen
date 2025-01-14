@@ -1,3 +1,4 @@
+import sys
 import json
 import glob
 
@@ -6,6 +7,7 @@ from music21 import converter, instrument, note, chord
 def generate_notesArray():
 
     music_num = 0
+    data = {}
 
     for file in glob.glob("midi_songs/*.midi"):
         midi = converter.parse(file)
@@ -37,10 +39,12 @@ def generate_notesArray():
                 symb = "Rest"
             notes.append((symb,str(element.quarterLength)))
 
-        data = {f"music_{music_num}" : {"notes": notes, "durations": duration}}
-        with open("notes_durations.json", "+a") as json_file:
-            json.dump(data, json_file, indent=1)
+        data[f"music_{music_num}"] = {"notes": notes, "offset": duration}
+        with open(sys.argv[1], "w+") as json_file:
+            json_file.write(json.dumps(data) + "\n")
+
         music_num += 1
+    
 
 
 generate_notesArray()
