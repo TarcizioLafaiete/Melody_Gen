@@ -1,5 +1,6 @@
 import sys
 import json
+import constants
 
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import Sequence
@@ -7,18 +8,20 @@ import numpy as np
 
 
 class DatasetLoader:
-    def __init__(self,json_file,n_limit,path):
+    def __init__(self):
         complete_data = {}
 
-        self.json_file = json_file
-        self.min = n_limit[0]
-        self.max = n_limit[1]
+        json_file = constants.JSON_FILE
+        self.min = constants.MUSIC_MIN_INDEX
+        self.max = constants.MUSIC_MAX_INDEX
         
         with open(json_file,'r') as file:
             complete_data = json.load(file)
 
         dataset_data = self.__split_data(complete_data)
-        print("Dados cortados")
+        with open(constants.SELECTED_JSON_FILE,'w') as file:
+            json.dump(dataset_data,file,indent=1)
+        print("Dados cortados e salvos")
 
         # dataset_data = self.__concat_notes_and_duration(dataset_data)
         # print("Tratamento dos dados")
@@ -31,16 +34,13 @@ class DatasetLoader:
         self.offset_reverse  = self.__generate_reverse_map(self.offset_map)
         print("Mapas reversos criados")
 
-        self.__save_map_and_reverse(self.notes_map,self.notes_reverse,f"{path}/notes_labels.json")
-        self.__save_map_and_reverse(self.offset_map,self.offset_reverse,f"{path}/offset_labels.json")
+        self.__save_map_and_reverse(self.notes_map,self.notes_reverse,constants.NOTES_LABEL)
+        self.__save_map_and_reverse(self.offset_map,self.offset_reverse,constants.OFFSET_LABEL)
         print("Mapas e reversos salvos")
  
 
     def get_maps(self):
         return self.notes_map,self.offset_map
-    
-    def get_limits(self):
-        return self.min,self.max
     
     def __save_map_and_reverse(self,map,reverse,file):
         data = {
@@ -77,5 +77,4 @@ class DatasetLoader:
 
             
 if __name__ == "__main__":
-    loader = DatasetLoader(sys.argv[1],(0,30),sys.argv[2])
-    print(loader.get_limits())
+    loader = DatasetLoader()
