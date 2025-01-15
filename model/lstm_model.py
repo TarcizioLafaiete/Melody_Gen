@@ -1,4 +1,5 @@
 import numpy as np
+import constants
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
@@ -9,15 +10,15 @@ from keras.callbacks import ModelCheckpoint
 class Melody_LSTM:
     def __init__(self,input_shape,note_output,offset_output):
         # Definir as entradas
-        inputNote = Input(shape=(None, input_shape))  # Exemplo com 10 recursos por timestep
-        inputOff = Input(shape=(None, input_shape))  # Outra entrada com 10 recursos por timestep
+        inputNote = Input(shape=(input_shape, 1))  # Exemplo com 10 recursos por timestep
+        inputOff = Input(shape=(input_shape, 1))  # Outra entrada com 10 recursos por timestep
 
         # Primeiro caminho para a primeira entrada
-        xNote = LSTM(256,input_shape=(None, input_shape), return_sequences=True)(inputNote)
+        xNote = LSTM(256,input_shape=(input_shape, 1), return_sequences=True)(inputNote)
         xNote = Dropout(0.2)(xNote)
 
         # Segundo caminho para a segunda entrada
-        xOff = LSTM(256,input_shape=(None, input_shape), return_sequences=True)(inputOff)
+        xOff = LSTM(256,input_shape=(input_shape, 1), return_sequences=True)(inputOff)
         xOff = Dropout(0.2)(xOff)
 
         # Concatenar as duas saídas das LSTM
@@ -46,11 +47,14 @@ class Melody_LSTM:
         # Resumo do modelo
         self.model.summary()
     
-    def compile(self,optimizer,loss,metrics):
-        self.model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    def compile(self,metrics):
+        self.model.compile(optimizer=constants.OPTIMIZER, loss=constants.LOSS, metrics=metrics)
 
-    def fit(self,input,output,epochs,batch_size):
-        filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    def getModel(self):
+        return self.model
+
+    def fit(self,train_gen,val_gen):
+        filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.keras"
         checkpoint = ModelCheckpoint(
             filepath,
             monitor='loss',
@@ -60,8 +64,8 @@ class Melody_LSTM:
         )
         callbacks_list = [checkpoint]
 
-        self.model.fit(input,output, epochs=epochs, batch_size=batch_size, callbacks=callbacks_list)
+        self.model.fit(train_gen,validation_data=val_gen, epochs=constants.EPOCHS, callbacks=callbacks_list)
 
 
 if __name__ == "__main__":
-    m = Melody_LSTM((10,20),(10,20),4,6)
+    m = Melody_LSTM(constants.SEQUENCE_LEN,30,4)
