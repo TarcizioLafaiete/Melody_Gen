@@ -14,11 +14,11 @@ class Melody_LSTM:
         inputOff = Input(shape=(input_shape, 1))  # Outra entrada com 10 recursos por timestep
 
         # Primeiro caminho para a primeira entrada
-        xNote = LSTM(256,input_shape=(input_shape, 1), return_sequences=True)(inputNote)
+        xNote = LSTM(256, return_sequences=True)(inputNote)
         xNote = Dropout(0.2)(xNote)
 
         # Segundo caminho para a segunda entrada
-        xOff = LSTM(256,input_shape=(input_shape, 1), return_sequences=True)(inputOff)
+        xOff = LSTM(256, return_sequences=True)(inputOff)
         xOff = Dropout(0.2)(xOff)
 
         # Concatenar as duas saídas das LSTM
