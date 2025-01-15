@@ -36,6 +36,7 @@ class MelodyDataGenerator(Sequence):
         return int(np.ceil(self.data_size / self.batch_size))
     
     def __getitem__(self, index):
+        
         start = index * self.batch_size
         end = min((index + 1) * self.batch_size, self.data_size)
 
@@ -52,17 +53,18 @@ class MelodyDataGenerator(Sequence):
         notes_outputNetwork = to_categorical(notes_outputNetwork,num_classes=len(self.notes_map))
         offset_outputNetwork = to_categorical(offset_outputNetwork,num_classes=len(self.offset_map))
 
-        # return (
-        # [
-        #     tf.convert_to_tensor(notes_inputNetwork, dtype=tf.float32),
-        #     tf.convert_to_tensor(offset_inputNetwork, dtype=tf.float32),
-        # ],
-        # [
-        #     tf.convert_to_tensor(notes_outputNetwork, dtype=tf.float32),
-        #     tf.convert_to_tensor(offset_outputNetwork, dtype=tf.float32),
-        # ])
+
+        return (
+        (
+            tf.convert_to_tensor(notes_inputNetwork, dtype=tf.float32),
+            tf.convert_to_tensor(offset_inputNetwork, dtype=tf.float32),
+        ),
+        (
+            tf.convert_to_tensor(notes_outputNetwork, dtype=tf.float32),
+            tf.convert_to_tensor(offset_outputNetwork, dtype=tf.float32),
+        ))
         
-        return [notes_inputNetwork,offset_inputNetwork], [notes_outputNetwork,offset_outputNetwork]
+        # return [notes_inputNetwork,offset_inputNetwork], [notes_outputNetwork,offset_outputNetwork]
 
     
     def __generate_Input_and_Output(self,start:int,end:int,atribute:str,map:dict):
