@@ -55,10 +55,6 @@ class DatasetLoader:
         return {key: value for key, value in data.items() 
                 if key.startswith("music_") and int(key.split("_")[1]) < self.max and int(key.split("_")[1]) >= self.min}
 
-    def __concat_notes_and_duration(self,dataset_data):
-        for key in dataset_data:
-            dataset_data[key]['notes'] = [f"{v[0]};{v[1]}" for v in dataset_data[key]['notes']]
-        return dataset_data
     
 
     def __get_data_unique_mapping(self,dataset_data,atribute):
