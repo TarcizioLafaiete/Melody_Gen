@@ -31,13 +31,13 @@ class MelodyDataGenerator(Sequence):
         self.offset_map = data['original']
 
         self.noteIn,self.noteOut = self.__get_Input_and_Output(dataset,self.notes_map,"notes")
-        self.offIn,self.offOut = self.__get_Input_and_Output(dataset,self.offset_map,"offset") 
+        self.offIn,self.offOut = self.__get_Input_and_Output(dataset,self.offset_map,"duration") 
 
         self.data_size = len(self.noteOut)
         self.indexes = np.arange(self.data_size)
 
     def __len__(self):
-        return int(np.ceil(self.data_size / self.batch_size))
+        return int(np.ceil(self.data_size / self.batch_size)) 
     
     def __getitem__(self, index):
         
