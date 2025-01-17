@@ -1,3 +1,6 @@
+import os
+os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
+
 import json
 import numpy as np
 
@@ -5,6 +8,20 @@ import constants
 import tensorflow as tf
 from model.lstm_model import Melody_LSTM
 from data_process.data_generator import MelodyDataGenerator
+
+def configure_gpu(gpu_index=0):
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        try:
+            tf.config.set_visible_devices(gpus[gpu_index],'GPU')
+            print(f"Usando GPU: {gpus[gpu_index].name}")
+
+            tf.config.experimental.set_memory_growth(gpus[gpu_index],True)
+        except RuntimeError as e:
+            print("Erro ao configurar GPU: {e}")
+    else:
+        print("Nenhuma GPU encontrada")
+
 
 def get_maps():
     notes_map = {}
@@ -39,9 +56,11 @@ def define_output_signature(n_map,o_map):
     return output_signature
 
 def main():
-    size = constants.MUSIC_MAX_INDEX - constants.MUSIC_MIN_INDEX
-    train_gen = MelodyDataGenerator(constants.TRAIN_FILE,int(np.ceil(size * constants.TRAIN_PERCENTAGE)))
-    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE,int(np.ceil(size * (1 - constants.TRAIN_PERCENTAGE))))
+
+    configure_gpu()
+
+    train_gen = MelodyDataGenerator(constants.TRAIN_FILE)
+    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE)
 
     n_map,o_map = get_maps()
 
@@ -57,12 +76,19 @@ def main():
     output_signature=out_sig
     )
 
-
     melodyModel = Melody_LSTM(constants.SEQUENCE_LEN,len(n_map),len(o_map))
     melodyModel.compile([["accuracy"], ["accuracy"]])
-    melodyModel.fit(train_dataset,val_dataset)
+    # model = melodyModel.getModel()
+    melodyModel.fit(train_dataset,val_dataset,len(train_gen),len(val_gen))
 
-
+    # for i in range(constants.EPOCHS):
+    #     for input,label in train_gen:
+    #         input[0] = input[0][:10000]
+    #         input[1] = input[1][:10000]
+    #         label[0] = label[0][:10000]
+    #         label[1] = label[1][:10000]
+    #         # print(len(label))    
+    #         model.train_on_batch(input,label)
 
 if __name__ == "__main__":
     main()
