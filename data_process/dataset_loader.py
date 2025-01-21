@@ -30,16 +30,13 @@ class DatasetLoader:
         # dataset_data = self.__concat_notes_and_duration(dataset_data)
         # print("Tratamento dos dados")
 
-        self.notes_map = self.__get_data_unique_mapping(dataset_data,"notes")
-        self.offset_map = self.__get_data_unique_mapping(dataset_data,"duration")
+        self.notes_map = self.__get_data_unique_mapping(dataset_data)
         print("Dados Mapeados")
 
         self.notes_reverse = self.__generate_reverse_map(self.notes_map)
-        self.offset_reverse  = self.__generate_reverse_map(self.offset_map)
         print("Mapas reversos criados")
 
         self.__save_map_and_reverse(self.notes_map,self.notes_reverse,constants.NOTES_LABEL)
-        self.__save_map_and_reverse(self.offset_map,self.offset_reverse,constants.OFFSET_LABEL)
         print("Mapas e reversos salvos")
  
 
@@ -70,11 +67,11 @@ class DatasetLoader:
                 val_data[key] = value 
         return train_data,val_data               
 
-    def __get_data_unique_mapping(self,dataset_data,atribute):
+    def __get_data_unique_mapping(self,dataset_data):
         unique_set = set()
 
-        for music_key, music_data in dataset_data.items():
-            values = music_data.get(atribute, [])
+        for _, music_data in dataset_data.items():
+            values = [v[0] for v in music_data]
             unique_set.update(values)  
 
         return {value: int(idx) for idx, value in enumerate(sorted(unique_set))}
