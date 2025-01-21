@@ -1,16 +1,17 @@
 #Arquivo json utilizando atualmente
-JSON_FILE = "files/notes_and_offsets_v4.json"
+JSON_FILE = "files/base_transposed.json"
+TIME_SERIES_FILE = "files/time_series.json"
 TRAIN_FILE = "files/train.json"
 VALIDATION_FILE = "files/validation.json"
 
 #Constantes relacionadas com o tamanho do conjunto de dados utilizados no treinamento
 MUSIC_MIN_INDEX = 0
-MUSIC_MAX_INDEX = 20
+MUSIC_MAX_INDEX = 10
 TRAIN_PERCENTAGE = 0.8
 
 #Arquivos de maps e reversos
 NOTES_LABEL = "files/notes_labels.json"
-OFFSET_LABEL = "files/offset_labels.json"
+DURATION_LABEL = "files/duration_labels.json"
 
 #Constantes de treinamento e do modelo
 SEQUENCE_LEN = 100
