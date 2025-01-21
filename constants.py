@@ -1,6 +1,5 @@
 #Arquivo json utilizando atualmente
 JSON_FILE = "files/base_transposed.json"
-TIME_SERIES_FILE = "files/time_series.json"
 TRAIN_FILE = "files/train.json"
 VALIDATION_FILE = "files/validation.json"
 
@@ -17,7 +16,7 @@ DURATION_LABEL = "files/duration_labels.json"
 SEQUENCE_LEN = 100
 BATCH_SIZE = 2
 EPOCHS = 200
-LOSS = ["categorical_crossentropy", "categorical_crossentropy"]
+LOSS = "categorical_crossentropy"
 OPTIMIZER = "adam"
 NET_QUOCIENT=4
 DROPOUT = 0.3

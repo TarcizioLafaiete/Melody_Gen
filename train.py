@@ -6,7 +6,8 @@ import numpy as np
 
 import constants
 import tensorflow as tf
-from model.lstm_model import Melody_LSTM
+# from model.lstm_model import Melody_LSTM
+from model.temporal_model import TimeSeries_Melody
 from data_process.data_generator import MelodyDataGenerator
 
 def configure_gpu(gpu_index=0):
@@ -29,29 +30,16 @@ def get_maps():
         data = json.load(file)
     notes_map = data['original']
 
-    offset_map = {}
-    with open(constants.OFFSET_LABEL,'r') as file:
-        data = json.load(file)
-    offset_map = data['original']
+    return notes_map
 
-    return notes_map,offset_map
-
-def define_output_signature(n_map,o_map):
+def define_output_signature(n_map):
     notes_input_shape = (None, constants.SEQUENCE_LEN, 1)
-    offset_input_shape = (None, constants.SEQUENCE_LEN, 1)
 
     notes_output_shape = (None, len(n_map))
-    offset_output_shape = (None, len(o_map))
 
     output_signature = (
-        (
             tf.TensorSpec(shape=notes_input_shape, dtype=tf.float32),  # notes_inputNetwork
-            tf.TensorSpec(shape=offset_input_shape, dtype=tf.float32), # offset_inputNetwork
-        ),
-        (
             tf.TensorSpec(shape=notes_output_shape, dtype=tf.float32), # notes_outputNetwork
-            tf.TensorSpec(shape=offset_output_shape, dtype=tf.float32), # offset_outputNetwork
-        )
     )
     return output_signature
 
@@ -62,9 +50,9 @@ def main():
     train_gen = MelodyDataGenerator(constants.TRAIN_FILE)
     val_gen = MelodyDataGenerator(constants.VALIDATION_FILE)
 
-    n_map,o_map = get_maps()
+    n_map = get_maps()
 
-    out_sig = define_output_signature(n_map,o_map)
+    out_sig = define_output_signature(n_map)
 
     train_dataset = tf.data.Dataset.from_generator(
     generator=lambda: (train_gen[i] for i in range(len(train_gen))),  # O gerador da classe que você implementou
@@ -76,19 +64,10 @@ def main():
     output_signature=out_sig
     )
 
-    melodyModel = Melody_LSTM(constants.SEQUENCE_LEN,len(n_map),len(o_map))
-    melodyModel.compile([["accuracy"], ["accuracy"]])
-    # model = melodyModel.getModel()
+    melodyModel = TimeSeries_Melody(constants.SEQUENCE_LEN,len(n_map))
+    melodyModel.compile(["accuracy"])
     melodyModel.fit(train_dataset,val_dataset,len(train_gen),len(val_gen))
 
-    # for i in range(constants.EPOCHS):
-    #     for input,label in train_gen:
-    #         input[0] = input[0][:10000]
-    #         input[1] = input[1][:10000]
-    #         label[0] = label[0][:10000]
-    #         label[1] = label[1][:10000]
-    #         # print(len(label))    
-    #         model.train_on_batch(input,label)
 
 if __name__ == "__main__":
     main()
