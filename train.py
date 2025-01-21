@@ -78,17 +78,7 @@ def main():
 
     melodyModel = Melody_LSTM(constants.SEQUENCE_LEN,len(n_map),len(o_map))
     melodyModel.compile([["accuracy"], ["accuracy"]])
-    # model = melodyModel.getModel()
     melodyModel.fit(train_dataset,val_dataset,len(train_gen),len(val_gen))
-
-    # for i in range(constants.EPOCHS):
-    #     for input,label in train_gen:
-    #         input[0] = input[0][:10000]
-    #         input[1] = input[1][:10000]
-    #         label[0] = label[0][:10000]
-    #         label[1] = label[1][:10000]
-    #         # print(len(label))    
-    #         model.train_on_batch(input,label)
 
 if __name__ == "__main__":
     main()
