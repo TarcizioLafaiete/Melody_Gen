@@ -25,13 +25,7 @@ class MelodyDataGenerator(Sequence):
             data = json.load(file)
         self.notes_map = data['original']
 
-        self.offset_map = {}
-        with open(constants.OFFSET_LABEL,'r') as file:
-            data = json.load(file)
-        self.offset_map = data['original']
-
-        self.noteIn,self.noteOut = self.__get_Input_and_Output(dataset,self.notes_map,"notes")
-        self.offIn,self.offOut = self.__get_Input_and_Output(dataset,self.offset_map,"duration") 
+        self.noteIn,self.noteOut = self.__get_Input_and_Output(dataset,self.notes_map)
 
         self.data_size = len(self.noteOut)
         self.indexes = np.arange(self.data_size)
@@ -46,40 +40,29 @@ class MelodyDataGenerator(Sequence):
 
         notes_inputNetwork = self.noteIn[start:end]
         notes_outputNetwork = self.noteOut[start:end]
-        offset_inputNetwork = self.offIn[start:end]
-        offset_outputNetwork = self.offOut[start:end]
 
         # print("Vetores de entrada e saída gerados")
 
         notes_inputNetwork = self.__input_normalize(notes_inputNetwork,self.sequence_len,self.notes_map)
-        offset_inputNetwork = self.__input_normalize(offset_inputNetwork,self.sequence_len,self.offset_map)
-
         # print("Entadas Normalizadas")
 
         notes_outputNetwork = to_categorical(notes_outputNetwork,num_classes=len(self.notes_map))
-        offset_outputNetwork = to_categorical(offset_outputNetwork,num_classes=len(self.offset_map))
 
 
         return (
-        (
             tf.convert_to_tensor(notes_inputNetwork, dtype=tf.float32),
-            tf.convert_to_tensor(offset_inputNetwork, dtype=tf.float32),
-        ),
-        (
             tf.convert_to_tensor(notes_outputNetwork, dtype=tf.float32),
-            tf.convert_to_tensor(offset_outputNetwork, dtype=tf.float32),
-        ))
+        )
         
         # return [notes_inputNetwork,offset_inputNetwork], [notes_outputNetwork,offset_outputNetwork]
     
-    def __get_Input_and_Output(self,data:dict,map:dict,atribute:str):
+    def __get_Input_and_Output(self,data:dict,map:dict):
         
         inputNet = []
         outputNet = []
         for music_key, music_data in data.items():
-            values = music_data.get(atribute,[])
-            first_n_value = values[:self.sequence_len]
-            others_value = values[self.sequence_len:]
+            first_n_value = music_data[:self.sequence_len]
+            others_value = music_data[self.sequence_len:]
             
             for value in others_value:
                 value = str(value)
