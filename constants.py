@@ -18,3 +18,5 @@ BATCH_SIZE = 2
 EPOCHS = 200
 LOSS = ["categorical_crossentropy", "categorical_crossentropy"]
 OPTIMIZER = "adam"
+NET_QUOCIENT=4
+DROPOUT = 0.3

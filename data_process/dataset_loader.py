@@ -31,7 +31,7 @@ class DatasetLoader:
         # print("Tratamento dos dados")
 
         self.notes_map = self.__get_data_unique_mapping(dataset_data,"notes")
-        self.offset_map = self.__get_data_unique_mapping(dataset_data,"offset")
+        self.offset_map = self.__get_data_unique_mapping(dataset_data,"duration")
         print("Dados Mapeados")
 
         self.notes_reverse = self.__generate_reverse_map(self.notes_map)

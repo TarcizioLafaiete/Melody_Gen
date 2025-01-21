@@ -2,10 +2,10 @@ import sys
 import json
 import glob
 
+import music21 as m21
 from music21 import converter, instrument, note, chord
 
 def generate_notesArray():
-
     music_num = 0
     data = {}
 
@@ -13,7 +13,9 @@ def generate_notesArray():
         midi = converter.parse(file)
         parse = None
         notes = []
-        duration = []
+
+        # Obter a tonalidade da música
+        key = midi.analyze('key')
 
         parts = instrument.partitionByInstrument(midi)
 
@@ -22,29 +24,31 @@ def generate_notesArray():
         else:
             parse = midi.flat.notes
 
-        last_offset = 0
         symb = ""
 
         for element in parse:
-
-            time_diff = element.offset - last_offset
-            last_offset = element.offset
-            duration.append(round(float(time_diff),3))
-
-            if isinstance(element,note.Note):
+            if isinstance(element, note.Note):
                 symb = str(element.pitch)
-            elif isinstance(element,chord.Chord):
-                symb = '.'.join(str(n) for n in element.normalOrder)
-            elif isinstance(element,note.Rest):
+            elif isinstance(element, chord.Chord):
+                symb = '.'.join(str(n) for n in element.pitches)
+            elif isinstance(element, note.Rest):
                 symb = "Rest"
-            notes.append(f"{symb};{str(element.quarterLength)}")
+            notes.append((symb, f"{element.quarterLength}"))
 
-        data[f"music_{music_num}"] = {"notes": notes, "offset": duration}
+        # Salvar dados da música
+        data[f"music_{music_num}"] = {
+            "notes": notes,
+            "key": {
+                "tonic": str(key.tonic),          # Tônica da tonalidade
+                "mode": str(key.mode),           # Modo (maior, menor, etc.)
+                "name": str(key)                 # Nome completo (ex.: "C major")
+            }
+        }
+
+        # Escrever os dados no arquivo JSON
         with open(sys.argv[1], "w+") as json_file:
-            json_file.write(json.dumps(data) + "\n")
+            json.dump(data, json_file, indent=2)
 
         music_num += 1
-    
-
 
 generate_notesArray()
