@@ -21,7 +21,10 @@ class DatasetLoader:
 
         dataset_data = self.__select_data(complete_data)
 
-        train_data,val_data = self.__split_data(dataset_data)
+        time_series = self.__generate_time_series(dataset_data)
+        print("Sequencia temporal gerada")
+
+        train_data,val_data = self.__split_data(time_series)
         with open(constants.TRAIN_FILE,'w') as file:
             json.dump(train_data,file,indent=1)
         with open(constants.VALIDATION_FILE,'w') as file:
@@ -31,7 +34,7 @@ class DatasetLoader:
         # dataset_data = self.__concat_notes_and_duration(dataset_data)
         # print("Tratamento dos dados")
 
-        self.notes_map = self.__get_data_unique_mapping(dataset_data)
+        self.notes_map = self.__get_data_unique_mapping(time_series)
         print("Dados Mapeados")
 
         self.notes_reverse = self.__generate_reverse_map(self.notes_map)
@@ -39,11 +42,6 @@ class DatasetLoader:
 
         self.__save_map_and_reverse(self.notes_map,self.notes_reverse,constants.NOTES_LABEL)
         print("Mapas e reversos salvos")
-    
-        self.__generate_time_series(dataset_data)
-        print("Sequencia temporal gerada e salva")
-
-
 
 
     def get_maps(self):
@@ -77,9 +75,7 @@ class DatasetLoader:
         unique_set = set()
 
         for _, music_data in dataset_data.items():
-            values = [v[0] for v in music_data]
-            unique_set.update(values)  
-        unique_set.update(["_"])
+            unique_set.update(music_data)  
         return {value: int(idx) for idx, value in enumerate(sorted(unique_set))}
     
     def __generate_reverse_map(self,map):
@@ -100,8 +96,7 @@ class DatasetLoader:
                         encoded_song.append("_")
             newData[music_key] = encoded_song
         
-        with open(constants.TIME_SERIES_FILE,'w') as file:
-            json.dump(newData,file,indent=1)
+        return newData
 
 
 
