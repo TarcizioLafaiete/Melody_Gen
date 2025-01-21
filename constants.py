@@ -1,5 +1,5 @@
 #Arquivo json utilizando atualmente
-JSON_FILE = "files/notes_and_offsets_v4.json"
+JSON_FILE = "files/base_transposed.json"
 TRAIN_FILE = "files/train.json"
 VALIDATION_FILE = "files/validation.json"
 
