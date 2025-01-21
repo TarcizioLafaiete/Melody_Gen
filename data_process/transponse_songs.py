@@ -8,7 +8,7 @@ with open(sys.argv[1],'r') as file:
     data = json.load(file)
 
 for music_id, music_content in data.items():
-    nData[music_id] = []
+    nData[music_id] = {"notes": [],"duration": []}
 
     notes = music_content['notes']
     key = m21.key.Key(music_content["key"]["tonic"],music_content["key"]["mode"])
@@ -16,14 +16,17 @@ for music_id, music_content in data.items():
     interval = m21.interval.Interval(key.tonic,target_tonic)
 
     transposed_notes = []
+    durations = []
     for note_str,duration in notes:
         if note_str != "Rest" and note_str != "":
             current_note = m21.note.Note(note_str)
             transposed_note = current_note.transpose(interval)
-            transposed_notes.append((transposed_note.nameWithOctave,duration))
+            transposed_notes.append(transposed_note.nameWithOctave)
         elif note_str == "Rest":
-            transposed_notes.append((note_str, duration))
-    nData[music_id] = transposed_notes
+            transposed_notes.append(note_str)
+        durations.append(duration)
+    nData[music_id]["notes"] = transposed_notes
+    nData[music_id]["duration"] = durations
    
 with open(sys.argv[2],'w') as file:
     json.dump(nData,file,indent=1)
