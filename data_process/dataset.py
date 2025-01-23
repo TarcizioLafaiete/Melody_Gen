@@ -9,7 +9,7 @@ def generate_notesArray():
     music_num = 0
     data = {}
 
-    for file in glob.glob("midi_songs/*.midi"):
+    for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
         parse = None
         notes = []
@@ -18,11 +18,12 @@ def generate_notesArray():
         key = midi.analyze('key')
 
         parts = instrument.partitionByInstrument(midi)
+        piano_parts = []
+        for part in parts:
+            if part.getInstrument().instrumentName.lower() == 'piano':
+                piano_parts.append(part)
 
-        if parts:
-            parse = parts.parts[0].recurse()
-        else:
-            parse = midi.flat.notes
+        parse = midi.flatten().notes
 
         symb = ""
 
