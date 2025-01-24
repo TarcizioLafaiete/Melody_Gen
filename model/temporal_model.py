@@ -41,7 +41,13 @@ class TimeSeries_Melody:
         )
         callbacks_list = [checkpoint]
 
-        self.model.fit(train_gen,validation_data=val_gen,epochs=constants.EPOCHS,batch_size=constants.BATCH_SIZE, callbacks=callbacks_list)
+        train_gen.on_epoch_end()
+
+        self.model.fit(train_gen,
+                    #    validation_data=val_gen,
+                       epochs=constants.EPOCHS,
+                       batch_size=constants.BATCH_SIZE, 
+                       callbacks=callbacks_list)
 
 
 if __name__ == "__main__":

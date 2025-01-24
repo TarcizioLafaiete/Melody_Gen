@@ -1,5 +1,5 @@
 #Arquivo json utilizando atualmente
-JSON_FILE = "files/classical_piano.json"
+JSON_FILE = "files/base_transposed.json"
 TRAIN_FILE = "files/train.json"
 VALIDATION_FILE = "files/validation.json"
 TEST_FILE = "files/test.json"
@@ -15,7 +15,7 @@ NOTES_LABEL = "files/notes_labels.json"
 #Constantes de treinamento e do modelo
 SEQUENCE_LEN = 50
 BATCH_SIZE = 64
-EPOCHS = 200
+EPOCHS = 20
 LOSS = "categorical_crossentropy"
 OPTIMIZER = "adam"
 NET_QUOCIENT=1

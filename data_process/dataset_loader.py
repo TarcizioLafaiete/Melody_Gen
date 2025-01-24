@@ -13,7 +13,7 @@ class DatasetLoader:
 
         notes = []
         for key,value in data.items():
-            notes.extend([note[0] for note in value['notes']])
+            notes.extend([note[0] for note in value])
 
         self.encoder = LabelEncoder()
         self.encoded_notes = self.encoder.fit_transform(notes)

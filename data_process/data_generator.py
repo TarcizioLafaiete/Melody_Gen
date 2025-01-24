@@ -7,9 +7,12 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import Sequence
 import numpy as np
 
+from data_process.dataset_loader import DatasetLoader
 
 class MelodyDataGenerator(Sequence):
-    def __init__(self,data,num_classes,augment=False):
+    def __init__(self,data,num_classes,augment=False, **kwargs):
+
+        super().__init__(**kwargs)
         
         self.batch_size = constants.BATCH_SIZE
         self.sequence_len = constants.SEQUENCE_LEN
@@ -30,9 +33,11 @@ class MelodyDataGenerator(Sequence):
         
         start = index * self.batch_size
         end = min((index + 1)*self.batch_size,self.data_size)
+        batch_indexes = self.indexes[start:end]
+        print(batch_indexes)
 
-        notes_inputNetwork = self.noteIn[start:end]
-        notes_outputNetwork = self.noteOut[start:end]
+        notes_inputNetwork = np.array([self.noteIn[i] for i in batch_indexes])
+        notes_outputNetwork = np.array([self.noteOut[i] for i in batch_indexes])
 
         notes_outputNetwork = to_categorical(notes_outputNetwork,num_classes=self.num_classes)
 
@@ -57,8 +62,12 @@ class MelodyDataGenerator(Sequence):
              
 if __name__ == "__main__":
     size = constants.MUSIC_MAX_INDEX - constants.MUSIC_MIN_INDEX
-    train_gen = MelodyDataGenerator(constants.TRAIN_FILE,int(np.ceil(size * constants.TRAIN_PERCENTAGE)))
-    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE,int(np.ceil(size *(1 - constants.TRAIN_PERCENTAGE))))
+    loader = DatasetLoader()
+    t,_,_ = loader.getDataset()
+    _,num_classes = loader.getEncoderFeatures()
+    train_gen = MelodyDataGenerator(t,num_classes)
+    for i in range(len(train_gen)):
+        x, y = train_gen[i]
+        print(f"Lote {i}: Entrada: {x.shape}, Saída: {y.shape}")
 
-    print(train_gen.__len__())
-    print(val_gen.__len__())
+    
