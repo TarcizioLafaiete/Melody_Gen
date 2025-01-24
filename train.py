@@ -6,9 +6,12 @@ import numpy as np
 
 import constants
 import tensorflow as tf
+from tensorflow.keras.utils import to_categorical
 # from model.lstm_model import Melody_LSTM
 from model.temporal_model import TimeSeries_Melody
 from data_process.data_generator import MelodyDataGenerator
+from data_process.dataset_loader import DatasetLoader
+
 
 def configure_gpu(gpu_index=0):
     gpus = tf.config.list_physical_devices('GPU')
@@ -32,41 +35,25 @@ def get_maps():
 
     return notes_map
 
-def define_output_signature(n_map):
-    notes_input_shape = (None, constants.SEQUENCE_LEN, 1)
-
-    notes_output_shape = (None, len(n_map))
-
-    output_signature = (
-            tf.TensorSpec(shape=notes_input_shape, dtype=tf.float32),  # notes_inputNetwork
-            tf.TensorSpec(shape=notes_output_shape, dtype=tf.float32), # notes_outputNetwork
-    )
-    return output_signature
-
 def main():
 
     configure_gpu()
 
-    train_gen = MelodyDataGenerator(constants.TRAIN_FILE)
-    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE)
+    loader = DatasetLoader()
+    encoder,num_classes = loader.getEncoderFeatures()
+    train,val,test = loader.getDataset()
 
-    n_map = get_maps()
+    train_gen = MelodyDataGenerator(train,num_classes)
+    val_gen = MelodyDataGenerator(val,num_classes)
 
-    out_sig = define_output_signature(n_map)
+    sequences,next_notes = train_gen.genSeq()
+    next_notes = to_categorical(next_notes,num_classes=num_classes)
 
-    train_dataset = tf.data.Dataset.from_generator(
-    generator=lambda: (train_gen[i] for i in range(len(train_gen))),  # O gerador da classe que você implementou
-    output_signature=out_sig
-    )
+    # n_map = get_maps()
 
-    val_dataset = tf.data.Dataset.from_generator(
-    generator=lambda: (val_gen[i] for i in range(len(val_gen))),  # O gerador da classe que você implementou
-    output_signature=out_sig
-    )
-
-    melodyModel = TimeSeries_Melody(constants.SEQUENCE_LEN,len(n_map))
+    melodyModel = TimeSeries_Melody(constants.SEQUENCE_LEN,num_classes)
     melodyModel.compile(["accuracy"])
-    melodyModel.fit(train_dataset,val_dataset,len(train_gen),len(val_gen))
+    melodyModel.fit(train_gen,val_gen)
 
 
 if __name__ == "__main__":
