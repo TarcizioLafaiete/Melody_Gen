@@ -7,24 +7,31 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import Sequence
 import numpy as np
 
-from data_process.dataset_loader import DatasetLoader
 
 class MelodyDataGenerator(Sequence):
-    def __init__(self,data,num_classes,augment=False, **kwargs):
-
-        super().__init__(**kwargs)
+    def __init__(self,json_file,augment=False):
         
         self.batch_size = constants.BATCH_SIZE
         self.sequence_len = constants.SEQUENCE_LEN
         self.augment = augment
         self.batch_array = np.arange(self.batch_size)
 
-        self.dataset = data
-        self.num_classes = num_classes
-        self.noteIn,self.noteOut = self.__generateSequence()
+        dataset = {}
+        with open(json_file,'r') as file:
+            dataset = json.load(file)
+        
+        self.notes_map = {}
+        with open(constants.NOTES_LABEL,'r') as file:
+            data = json.load(file)
+        self.notes_map = data['original']
+
+        self.noteIn,self.noteOut = self.__get_Input_and_Output(dataset,self.notes_map)
 
         self.data_size = len(self.noteOut)
         self.indexes = np.arange(self.data_size)
+
+    def getSeq(self):
+        return self.noteIn,self.noteOut
 
     def __len__(self):
         return int(np.ceil(self.data_size / self.batch_size)) 
@@ -32,42 +39,51 @@ class MelodyDataGenerator(Sequence):
     def __getitem__(self, index):
         
         start = index * self.batch_size
-        end = min((index + 1)*self.batch_size,self.data_size)
-        batch_indexes = self.indexes[start:end]
-        print(batch_indexes)
+        end = min((index + 1) * self.batch_size, self.data_size)
 
-        notes_inputNetwork = np.array([self.noteIn[i] for i in batch_indexes])
-        notes_outputNetwork = np.array([self.noteOut[i] for i in batch_indexes])
+        notes_inputNetwork = self.noteIn[start:end]
+        notes_outputNetwork = self.noteOut[start:end]
 
-        notes_outputNetwork = to_categorical(notes_outputNetwork,num_classes=self.num_classes)
+        # print("Vetores de entrada e saída gerados")
+
+        # notes_inputNetwork = self.__input_normalize(notes_inputNetwork,self.sequence_len,self.notes_map)
+        # print("Entadas Normalizadas")
+
+        notes_outputNetwork = to_categorical(notes_outputNetwork,num_classes=len(self.notes_map))
 
         return notes_inputNetwork,notes_outputNetwork
         # return [notes_inputNetwork,offset_inputNetwork], [notes_outputNetwork,offset_outputNetwork]
     
-    def on_epoch_end(self):
-        """Embaralha os índices após cada época."""
-        np.random.shuffle(self.indexes)
-    
-    def genSeq(self):
-        return self.__generateSequence()
+    def __get_Input_and_Output(self,data:dict,map:dict):
+        
+        inputNet = []
+        outputNet = []
+        for music_key, music_data in data.items():
+            first_n_value = music_data[:self.sequence_len]
+            others_value = music_data[self.sequence_len:]
+            
+            for value in others_value:
+                value = str(value)
+                inputNet.append([map[f"{char}"] for char in first_n_value])
+                outputNet.append(map[value])
+                first_n_value.pop(0)
+                first_n_value.append(value)
+        return np.array(inputNet),np.array(outputNet)
 
-    def __generateSequence(self):
-        sequences = []
-        next_notes = []
-        for i in range(len(self.dataset) - constants.SEQUENCE_LEN):
-            sequences.append(self.dataset[i:i+constants.SEQUENCE_LEN])
-            next_notes.append(self.dataset[i+constants.SEQUENCE_LEN])
 
-        return np.array(sequences), np.array(next_notes)
-             
+    def __input_normalize(self,input_seq,sequence_length,map):
+        
+        n_patterns = len(input_seq)
+        input_seq = np.reshape(input_seq,(n_patterns,sequence_length,1))
+        return input_seq/float(len(map))
+
+
+            
 if __name__ == "__main__":
     size = constants.MUSIC_MAX_INDEX - constants.MUSIC_MIN_INDEX
-    loader = DatasetLoader()
-    t,_,_ = loader.getDataset()
-    _,num_classes = loader.getEncoderFeatures()
-    train_gen = MelodyDataGenerator(t,num_classes)
-    for i in range(len(train_gen)):
-        x, y = train_gen[i]
-        print(f"Lote {i}: Entrada: {x.shape}, Saída: {y.shape}")
+    train_gen = MelodyDataGenerator(constants.TRAIN_FILE,int(np.ceil(size * constants.TRAIN_PERCENTAGE)))
+    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE,int(np.ceil(size *(1 - constants.TRAIN_PERCENTAGE))))
 
+    print(train_gen.__len__())
+    print(val_gen.__len__())
     

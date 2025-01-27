@@ -39,22 +39,25 @@ def main():
 
     configure_gpu()
 
-    loader = DatasetLoader()
-    encoder,num_classes = loader.getEncoderFeatures()
-    train,val,test = loader.getDataset()
+    # loader = DatasetLoader()
+    # encoder,num_classes = loader.getEncoderFeatures()
+    # data = loader.getDataset()
 
-    train_gen = MelodyDataGenerator(train,num_classes)
-    val_gen = MelodyDataGenerator(val,num_classes)
+    n_map = get_maps()
 
-    sequences,next_notes = train_gen.genSeq()
-    next_notes = to_categorical(next_notes,num_classes=num_classes)
+    train_gen = MelodyDataGenerator(constants.TRAIN_FILE,len(n_map))
+    # val_gen = MelodyDataGenerator(val,num_classes
 
-    # n_map = get_maps()
+    train_seq,train_notes = train_gen.getSeq()
+    train_notes = to_categorical(train_notes,num_classes=len(n_map))
 
-    melodyModel = TimeSeries_Melody(constants.SEQUENCE_LEN,num_classes)
+    print(train_seq.shape)
+
+    # val_seq,val_notes = val_gen.genSeq()
+    # val_notes = to_categorical(val_notes,num_classes=num_classes)
+
+    melodyModel = TimeSeries_Melody(constants.SEQUENCE_LEN,len(n_map))
     melodyModel.compile(["accuracy"])
-    melodyModel.fit(train_gen,val_gen)
-
-
+    melodyModel.fit(train_seq,train_notes)
 if __name__ == "__main__":
     main()
