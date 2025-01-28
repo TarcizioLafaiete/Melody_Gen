@@ -13,12 +13,12 @@ TRAIN_PERCENTAGE = 0.8
 NOTES_LABEL = "files/notes_labels.json"
 
 #Constantes de treinamento e do modelo
-SEQUENCE_LEN = 50
+SEQUENCE_LEN = 130
 BATCH_SIZE = 64
 EPOCHS = 200
 LOSS = "categorical_crossentropy"
 OPTIMIZER = "adam"
 NET_QUOCIENT=1
 DROPOUT = 0.2
-MUSIC_LEN = 2000
-MUSIC_TIME_STEP = 0.0625
+MUSIC_LEN = 1000
+MUSIC_TIME_STEP = 0.25
