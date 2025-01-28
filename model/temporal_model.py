@@ -2,9 +2,7 @@ import numpy as np
 import constants
 
 import tensorflow as tf
-import tensorflow.keras as keras
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, LSTM, Dropout, Dense, Concatenate, Embedding
+from tensorflow.keras.layers import LSTM, Dropout, Dense,  Embedding
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from keras.callbacks import ModelCheckpoint
 from tensorflow.keras.utils import to_categorical

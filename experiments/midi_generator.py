@@ -80,7 +80,7 @@ def create_midi(music_note):
                 print(f"Nota : {last_note.nameWithOctave}, duration:{last_note.duration.quarterLength}")
                 midi_stream.append(last_note)
 
-                new_note = note.Note(m_note)
+                new_note = note.Note(int(m_note))
                 new_note.offset = offset
                 last_note = new_note
                 duration = 0

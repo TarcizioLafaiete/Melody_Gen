@@ -62,7 +62,7 @@ class DatasetLoader:
 
     def __split_data(self,data):
             test_dataset = {}
-            test_music = f"music_17"
+            test_music = f"music_{self.max-1}"
             test_dataset["test"] = data[test_music]
             train_dataset = {k:v for k,v in data.items() if k != test_music}
             return train_dataset,test_dataset
@@ -78,13 +78,13 @@ class DatasetLoader:
         reverse = {v: k for k, v in map.items()}    
         return reverse
     
-    def __generate_time_series(self,dataset,time_step=0.25):
+    def __generate_time_series(self,dataset):
 
         newData = {}
         for music_key, music_data in dataset.items():
             encoded_song = []
             for note,duration in music_data:
-                steps = int(float(Fraction(duration)) / time_step)
+                steps = int(float(Fraction(duration)) / constants.MUSIC_TIME_STEP)
                 for step in range(steps):
                     if step == 0:
                         encoded_song.append(note)
