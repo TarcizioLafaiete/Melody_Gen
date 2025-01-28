@@ -21,7 +21,7 @@ for music_id, music_content in data.items():
         if note_str != "Rest" and note_str != "":
             current_note = m21.note.Note(note_str)
             transposed_note = current_note.transpose(interval)
-            transposed_notes.append(transposed_note.nameWithOctave)
+            transposed_notes.append(transposed_note.pitch.midi)
         elif note_str == "Rest":
             transposed_notes.append(note_str)
         durations.append(duration)
