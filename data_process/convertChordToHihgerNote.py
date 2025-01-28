@@ -1,7 +1,7 @@
 import sys
 import json
 
-from music21 import chord, pitch
+from music21 import chord, pitch, note
 
 data = {}
 nData = {}

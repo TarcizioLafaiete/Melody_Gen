@@ -36,6 +36,12 @@ class MelodyDataGenerator(Sequence):
         self.data_size = len(self.noteOut)
         self.indexes = np.arange(self.data_size)
 
+    def getDurationSeq(self):
+        return self.offIn,self.offOut
+    
+    def getNotesSeq(self):
+        return self.noteIn,self.noteOut
+
     def __len__(self):
         return int(np.ceil(self.data_size / self.batch_size)) 
     
@@ -87,7 +93,7 @@ class MelodyDataGenerator(Sequence):
                 outputNet.append(map[value])
                 first_n_value.pop(0)
                 first_n_value.append(value)
-        return inputNet,outputNet
+        return np.array(inputNet),np.array(outputNet)
 
 
     def __input_normalize(self,input_seq,sequence_length,map):
@@ -101,7 +107,4 @@ class MelodyDataGenerator(Sequence):
 if __name__ == "__main__":
     size = constants.MUSIC_MAX_INDEX - constants.MUSIC_MIN_INDEX
     train_gen = MelodyDataGenerator(constants.TRAIN_FILE,int(np.ceil(size * constants.TRAIN_PERCENTAGE)))
-    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE,int(np.ceil(size *(1 - constants.TRAIN_PERCENTAGE))))
-
     print(train_gen.__len__())
-    print(val_gen.__len__())

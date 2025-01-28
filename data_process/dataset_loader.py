@@ -20,11 +20,11 @@ class DatasetLoader:
 
         dataset_data = self.__select_data(complete_data)
 
-        train_data,val_data = self.__split_data(dataset_data)
+        train_data,test_data = self.__split_data(dataset_data)
         with open(constants.TRAIN_FILE,'w') as file:
             json.dump(train_data,file,indent=1)
-        with open(constants.VALIDATION_FILE,'w') as file:
-            json.dump(val_data,file,indent=1)
+        with open(constants.TEST_FILE,'w') as file:
+            json.dump(test_data,file,indent=1)
         print("Dados cortados e salvos")
 
         # dataset_data = self.__concat_notes_and_duration(dataset_data)
@@ -60,15 +60,11 @@ class DatasetLoader:
                 if key.startswith("music_") and int(key.split("_")[1]) < self.max and int(key.split("_")[1]) >= self.min}
 
     def __split_data(self,data):
-        split_point = int(np.ceil((self.max - self.min)*constants.TRAIN_PERCENTAGE)) +  self.min
-        train_data = {}
-        val_data = {}
-        for key,value in data.items():
-            if key.startswith("music_") and int(key.split("_")[1]) < split_point:
-                train_data[key] = value
-            else:
-                val_data[key] = value 
-        return train_data,val_data               
+        test_dataset = {}
+        test_music = f"music_{self.max-1}"
+        test_dataset["test"] = data[test_music]
+        train_dataset = {k:v for k,v in data.items() if k != test_music}
+        return train_dataset,test_dataset           
 
     def __get_data_unique_mapping(self,dataset_data,atribute):
         unique_set = set()

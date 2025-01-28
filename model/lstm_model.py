@@ -4,7 +4,7 @@ import constants
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, LSTM, Dropout, Dense, Concatenate
+from tensorflow.keras.layers import Input, LSTM, Dropout, Dense, concatenate, Embedding, Lambda
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from keras.callbacks import ModelCheckpoint
 
@@ -12,40 +12,47 @@ from keras.callbacks import ModelCheckpoint
 class Melody_LSTM:
     def __init__(self,input_shape,note_output,offset_output):
      # Definir as entradas
-        inputNote = Input(shape=(input_shape, 1))  # Exemplo com 10 recursos por timestep
-        inputOff = Input(shape=(input_shape, 1))  # Outra entrada com 10 recursos por timestep
-
-        # Primeiro caminho para a primeira entrada
-        xNote = LSTM(int(256//constants.NET_QUOCIENT), return_sequences=True)(inputNote)
+        inputNote = Input(shape=(input_shape,))  # Exemplo com 10 recursos por timestep
+        embeddedNote = Embedding(input_dim=note_output, output_dim=100, input_length=input_shape)(inputNote)
+        xNote = LSTM(int(256//constants.NET_QUOCIENT), return_sequences=True)(embeddedNote)
         xNote = Dropout(constants.DROPOUT)(xNote)
+        xNote = LSTM(int(512//constants.NET_QUOCIENT))(xNote)
+        xNote = BatchNorm()(xNote)
+        xNote = Dense(int(256//constants.NET_QUOCIENT),activation='relu')(xNote)
+        outputNote = Dropout(constants.DROPOUT)(xNote)
+        outputNote = Dense(note_output, activation='softmax',name="Note_Out")(outputNote)  # Saída binária, por exemplo
 
-        # Segundo caminho para a segunda entrada
-        xOff = LSTM(int(256//constants.NET_QUOCIENT), return_sequences=True)(inputOff)
+
+
+        inputOff = Input(shape=(input_shape,))  # Outra entrada com 10 recursos por timestep
+        embeddedOff = Embedding(input_dim=offset_output, output_dim=100, input_length=input_shape)(inputOff)
+        xOff = LSTM(int(256//constants.NET_QUOCIENT), return_sequences=True)(embeddedOff)
         xOff = Dropout(constants.DROPOUT)(xOff)
+        xOff = LSTM(int(512//constants.NET_QUOCIENT))(xOff)
+        xOff = BatchNorm()(xOff)
+        xOff = Dense(int(256//constants.NET_QUOCIENT),activation='relu')(xOff)
+        outputOff = Dropout(constants.DROPOUT)(xOff)
+        outputOff = Dense(offset_output, activation='softmax',name="Duration_Out")(outputOff)  # Saída binária, por exemplo
 
-        # Concatenar as duas saídas das LSTM
-        merged = Concatenate()([xNote, xOff])
+        
+        # weight1 = tf.Variable(1.0, trainable=True, name="Weight_Input1")
+        # weight2 = tf.Variable(1.0, trainable=True, name="Weight_Input2")
+
+        # xNote_weighted = Lambda(lambda x: x[0] * x[1])([xNote, weight1])
+        # xOff_weighted = Lambda(lambda x: x[0] * x[1])([xOff, weight2])
+
+        # # Concatenar as duas saídas das LSTM
+        # merged = concatenate([xNote_weighted, xOff_weighted])
 
         # Adicionar LSTM, Dropout e Dense após a concatenação
-        x = LSTM(int(512//constants.NET_QUOCIENT), return_sequences=True)(merged)
-        x = Dropout(constants.DROPOUT)(x)
-        x = LSTM(int(512//constants.NET_QUOCIENT))(x)
-        x = BatchNorm()(x)
-        x = Dropout(constants.DROPOUT)(x)
-        x = Dense(int(256//constants.NET_QUOCIENT),activation='relu')(x)
+        # x = LSTM(int(512//constants.NET_QUOCIENT))(merged)
+        # x = BatchNorm()(x)
+        # x = Dropout(constants.DROPOUT)(x)
+        # x = Dense(int(256//constants.NET_QUOCIENT),activation='relu')(x)
 
         # Camadas Dense para a primeira saída
-        outputNote = Dense(int(128//constants.NET_QUOCIENT), activation='relu')(x)
-        x = BatchNorm()(x)
-        outputNote = Dropout(constants.DROPOUT)(outputNote)
-        outputNote = Dense(note_output, activation='softmax')(outputNote)  # Saída binária, por exemplo
-
-        # Camadas Dense para a segunda saída
-        outputOff = Dense(int(128//constants.NET_QUOCIENT), activation='relu')(x)
-        x = BatchNorm()(x)
-        outputOff = Dropout(constants.DROPOUT)(outputOff)
-        outputOff = Dense(offset_output, activation='softmax')(outputOff)  # Saída binária, por exemplo
-
+        
+        
         # Criar o modelo com as duas entradas e saídas
         self.model = Model(inputs=[inputNote, inputOff], outputs=[outputNote, outputOff])
 
@@ -53,12 +60,15 @@ class Melody_LSTM:
         self.model.summary()
     
     def compile(self,metrics):
-        self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01), loss=constants.LOSS,metrics=metrics)
+        self.model.compile(optimizer=constants.OPTIMIZER,
+                           loss_weights={"Note_Out": 2.0, "Duration_Out": 0.5}, 
+                           loss={"Note_Out": constants.LOSS, "Duration_Out": constants.LOSS},
+                           metrics=metrics)
 
     def getModel(self):
         return self.model
 
-    def fit(self,train_gen,val_gen,train_len,val_len):
+    def fit(self,input,output):
         filepath = "weights/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.keras"
         checkpoint = ModelCheckpoint(
             filepath,
@@ -69,7 +79,13 @@ class Melody_LSTM:
         )
         callbacks_list = [checkpoint]
 
-        self.model.fit(train_gen.repeat(),validation_data=val_gen.repeat(),steps_per_epoch=train_len,validation_steps=val_len,epochs=constants.EPOCHS, callbacks=callbacks_list)
+        self.model.fit(input,
+                       output,
+                       validation_split=0.2,
+                        # validation_data =(val_input,val_output),
+                       epochs=constants.EPOCHS,
+                       batch_size=constants.BATCH_SIZE, 
+                       callbacks=callbacks_list)
 
 
 if __name__ == "__main__":

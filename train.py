@@ -6,8 +6,12 @@ import numpy as np
 
 import constants
 import tensorflow as tf
+from tensorflow.keras.utils import to_categorical
 from model.lstm_model import Melody_LSTM
+# from model.temporal_model import TimeSeries_Melody
 from data_process.data_generator import MelodyDataGenerator
+from data_process.dataset_loader import DatasetLoader
+
 
 def configure_gpu(gpu_index=0):
     gpus = tf.config.list_physical_devices('GPU')
@@ -36,49 +40,39 @@ def get_maps():
 
     return notes_map,offset_map
 
-def define_output_signature(n_map,o_map):
-    notes_input_shape = (None, constants.SEQUENCE_LEN, 1)
-    offset_input_shape = (None, constants.SEQUENCE_LEN, 1)
-
-    notes_output_shape = (None, len(n_map))
-    offset_output_shape = (None, len(o_map))
-
-    output_signature = (
-        (
-            tf.TensorSpec(shape=notes_input_shape, dtype=tf.float32),  # notes_inputNetwork
-            tf.TensorSpec(shape=offset_input_shape, dtype=tf.float32), # offset_inputNetwork
-        ),
-        (
-            tf.TensorSpec(shape=notes_output_shape, dtype=tf.float32), # notes_outputNetwork
-            tf.TensorSpec(shape=offset_output_shape, dtype=tf.float32), # offset_outputNetwork
-        )
-    )
-    return output_signature
-
 def main():
 
     configure_gpu()
 
-    train_gen = MelodyDataGenerator(constants.TRAIN_FILE)
-    val_gen = MelodyDataGenerator(constants.VALIDATION_FILE)
+    # loader = DatasetLoader()
+    # encoder,num_classes = loader.getEncoderFeatures()
+    # data = loader.getDataset()
 
-    n_map,o_map = get_maps()
+    n_map,d_map = get_maps()
 
-    out_sig = define_output_signature(n_map,o_map)
+    train_gen = MelodyDataGenerator(constants.TRAIN_FILE,len(n_map))
+    # val_gen = MelodyDataGenerator(val,num_classes
 
-    train_dataset = tf.data.Dataset.from_generator(
-    generator=lambda: (train_gen[i] for i in range(len(train_gen))),  # O gerador da classe que você implementou
-    output_signature=out_sig
-    )
+    train_notes_seq,train_notes = train_gen.getNotesSeq()
+    train_duration_seq, train_duration = train_gen.getDurationSeq()
 
-    val_dataset = tf.data.Dataset.from_generator(
-    generator=lambda: (val_gen[i] for i in range(len(val_gen))),  # O gerador da classe que você implementou
-    output_signature=out_sig
-    )
+    train_notes = to_categorical(train_notes,num_classes=len(n_map))
+    train_duration = to_categorical(train_duration,num_classes=len(d_map))
 
-    melodyModel = Melody_LSTM(constants.SEQUENCE_LEN,len(n_map),len(o_map))
-    melodyModel.compile([["accuracy"], ["accuracy"]])
-    melodyModel.fit(train_dataset,val_dataset,len(train_gen),len(val_gen))
+    print(train_notes_seq.shape)
+    print(train_duration_seq.shape)
 
+    # val_seq,val_notes = val_gen.genSeq()
+    # val_notes = to_categorical(val_notes,num_classes=num_classes)
+
+    tensor_input = (tf.convert_to_tensor(train_notes_seq,dtype=tf.float32),
+                    tf.convert_to_tensor(train_duration_seq,dtype=tf.float32))
+    
+    tensor_output = (tf.convert_to_tensor(train_notes,dtype=tf.float32),
+                     tf.convert_to_tensor(train_duration,dtype=tf.float32))
+
+    melodyModel = Melody_LSTM(constants.SEQUENCE_LEN,len(n_map),len(d_map))
+    melodyModel.compile([["accuracy"],["accuracy"]])
+    melodyModel.fit(tensor_input,tensor_output)
 if __name__ == "__main__":
     main()
