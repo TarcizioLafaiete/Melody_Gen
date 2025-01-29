@@ -74,10 +74,27 @@ def create_midi(music_note):
                 duration += constants.MUSIC_TIME_STEP
             except Exception as e:
                 print(f"Erro em uma repeticao de nota {last_note} -> {e}")
+        elif "." in m_note:
+            try:
+                last_note.duration.quarterLength = duration
+                midi_stream.append(last_note)
+
+                notes_in_chord = m_note.split(".")
+                notes = []
+                for c_note in notes_in_chord:
+                    new_note = note.Note(int(c_note))
+                    notes.append(new_note)
+                new_chord = chord.Chord(notes)
+                new_chord.offset = offset
+                last_note = new_chord
+                duration = 0
+
+            except Exception as e:
+                print(f"Erro ao processar acrodes: {m_note} -> {e}")
         else:  # Detecção de nota simples
             try:
                 last_note.duration.quarterLength = duration + constants.MUSIC_TIME_STEP
-                print(f"Nota : {last_note.nameWithOctave}, duration:{last_note.duration.quarterLength}")
+                # print(f"Nota : {last_note.nameWithOctave}, duration:{last_note.duration.quarterLength}")
                 midi_stream.append(last_note)
 
                 new_note = note.Note(int(m_note))

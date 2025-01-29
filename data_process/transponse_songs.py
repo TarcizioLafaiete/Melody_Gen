@@ -17,10 +17,15 @@ for music_id, music_content in data.items():
 
     transposed_notes = []
     for note_str,duration in notes:
-        if note_str != "Rest" and note_str != "":
+        if note_str != "Rest" and note_str != "" and not "." in note_str:
             current_note = m21.note.Note(note_str)
             transposed_note = current_note.transpose(interval)
-            transposed_notes.append((transposed_note.pitch.midi,duration))
+            transposed_notes.append((str(transposed_note.pitch.midi),duration))
+        elif "." in note_str:
+            chords = note_str.split(".")
+            transposed_chords = [m21.note.Note(chord).transpose(interval).pitch.midi for chord in chords]
+            transposed_chords_str = ".".join(str(n) for n in transposed_chords)
+            transposed_notes.append((transposed_chords_str,duration))
         elif note_str == "Rest":
             transposed_notes.append((note_str, duration))
     nData[music_id] = transposed_notes

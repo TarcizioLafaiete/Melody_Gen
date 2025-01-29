@@ -13,8 +13,9 @@ for key in data:
     for notes in data[key]['notes']:
         if'.' in notes[0]:
             pitch_notes = [pitch.Pitch(n) for n in notes[0].split('.')]
-            higher_note = max(pitch_notes, key = lambda p : p.midi)
-            nData[key]['notes'].append((higher_note.nameWithOctave,notes[1]))
+            top_notes = sorted(pitch_notes,key=lambda p: p.midi,reverse=True)[:3]
+            higher_notes = '.'.join(n.nameWithOctave for n in top_notes)
+            nData[key]['notes'].append((higher_notes,notes[1]))
         else:
             nData[key]['notes'].append(notes)
     nData[key]['key'] = data[key]['key']
